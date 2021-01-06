@@ -10,7 +10,7 @@ SETTING = {
     'sink_w': 10.,
     'sink_h': 5.,
     'sink_d': 1.,
-    'sink_pos_x': -3.,
+    'sink_pos_x': 20.,
     'left_table_width': 50.,
     'right_table_width': 50.,
     'faucet_h': 12.,
@@ -32,32 +32,23 @@ def query_gui(action_type, kitchen):
 
 def main():
     kitchen = Kitchen2D(**SETTING)
-    expid_pour, expid_scoop = 0, 0 
+    # expid_pour, expid_scoop = 0, 0 
 
-    # Try setting is_adaptive to be False. It will use the adaptive sampler that samples uniformly from
-    # the feasible precondition. If is_adaptive is False, it uses the diverse sampler. If flag_lk is False,
-    # and is_adaptive is False, it uses the diverse sampler with a fixed kernel. If flag_lk is True,
-    # and is uniform is Ture, it uses the diverse sampler with the kernel parameters learned from plan feedbacks.
-    gp_pour, c_pour = helper.process_gp_sample(expid_pour, exp='pour', is_adaptive=False, flag_lk=False)
-    pour_to_w, pour_to_h, pour_from_w, pour_from_h = c_pour
-    print("pour to w: {}".format(pour_to_w))
-    print("pour to h: {}".format(pour_to_h))
-    print("pour from w: {}".format(pour_from_w))
-    print("pour from h: {}".format(pour_from_h))
+    pour_to_w = 4.17393549546
+    pour_to_h = 4.05998671658
+    pour_from_w = 3.61443970857
+    pour_from_h = 4.51052132521
 
-
-    gp_scoop, c_scoop = helper.process_gp_sample(expid_scoop, exp='scoop', is_adaptive=True, flag_lk=False)
-    scoop_w, scoop_h = c_scoop
+    scoop_w = 5.388370713
+    scoop_h = 4.52898336641
     holder_d = 0.5
-    print("scoop w: {}".format(scoop_w))
-    print("scoop h: {}".format(scoop_h))
 
     # Create objects
     gripper = Gripper(kitchen, (20,40), 0)
     cup1 = ks.make_cup(kitchen, (10,0), 0, pour_from_w, pour_from_h, holder_d)
     cup2 = ks.make_cup(kitchen, (-25,0), 0, pour_to_w, pour_to_h, holder_d)
     block = ks.make_block(kitchen, (-9,0), 0, 4, 4)
-    large_cup = ks.make_cup(kitchen, (23, 0), 0, scoop_w, scoop_h, holder_d)
+    large_cup = ks.make_cup(kitchen, (0, 0), 0, scoop_w, scoop_h, holder_d)
     
     # Move
     query_gui('MOVE', kitchen)
@@ -69,13 +60,11 @@ def main():
 
     # Pick
     query_gui('GRASP', kitchen)
-    # Sample from the super level set of the GP learned for pour
-    grasp, rel_x, rel_y, dangle, _, _, _, _ = gp_pour.sample(c_pour)
+    grasp = 0.306249162768
+    rel_x = 3.70183788428
+    rel_y = 9.01263886707
+    dangle = 1.59620914618
     dangle *= np.sign(rel_x)
-    print("grasp L75: {}".format(grasp))
-    print("rel_x L75: {}".format(rel_x))
-    print("rel_y L75: {}".format(rel_y))
-    print("dangle L75: {}".format(dangle))
 
     gripper.find_path((15, 10), 0)
     gripper.grasp(cup1, grasp)
@@ -98,18 +87,17 @@ def main():
     spoon = ks.make_spoon(kitchen, (23, 10), 0, 0.2, 3, 1.)
 
     query_gui('SCOOP', kitchen)
-    rel_x1, rel_y1, rel_x2, rel_y2, rel_x3, rel_y3, grasp, _, _ = gp_scoop.sample(c_scoop)
+    rel_x1 = 0.0276296492162
+    rel_y1 = 0.611922721287
+    rel_x2 = 0.846900041891
+    rel_y2 = 0.056968220054
+    rel_x3 = 0.960750333945
+    rel_y3 = 0.126499043204
+    grasp = 0.883195866437
+
     rel_pos1 = (rel_x1, rel_y1); rel_pos2 = (rel_x2, rel_y2); rel_pos3 = (rel_x3, rel_y3)
     gripper.set_grasped(spoon, grasp, (23, 10), 0)
     print(gripper.scoop(large_cup, rel_pos1, rel_pos2, rel_pos3))
-
-    print("rel_x1 L100: {}".format(rel_x1))
-    print("rel_y1 L100: {}".format(rel_y1))
-    print("rel_x2 L100: {}".format(rel_x2))
-    print("rel_y2 L100: {}".format(rel_y2))
-    print("rel_x3 L100: {}".format(rel_x3))
-    print("rel_y3 L100: {}".format(rel_y3))
-    print("grasp L100: {}".format(grasp))
 
     # Dump
     query_gui('DUMP', kitchen)
@@ -117,7 +105,7 @@ def main():
     
     # Place
     query_gui('PLACE', kitchen)
-    gripper.place((26, 10.), 0)
+    gripper.place((0, 10.), 0)
 
     # Stir
     query_gui('STIR', kitchen)
@@ -129,3 +117,15 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+
+# TODO
+# [x] Test with different arrangement of objects --> parameters unaffected!
+# [] Test with more objects and calls
+# [] Add abstraction to fit "API" functionality
+# [] Add "coffee bag", or alternatively, coffee faucet
+# [] Add "drawers" to hide cups and other objects
+# [] Change color of setting to become Kitchen for Progress 2D
+# [] Clean code to remove unnecessary portions
