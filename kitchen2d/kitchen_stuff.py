@@ -35,6 +35,7 @@ class guiWorld:
             'faucet': (175, 175, 175, 255),
             'water': (26, 130, 252),
             'block': (0, 99, 0),
+            'cap': (47, 50, 56),
             'coffee': (165, 42, 42),
             'cream': (225, 225, 225),
             'sugar': (255, 192, 203),
@@ -349,6 +350,8 @@ def make_body(kitchen, name, pose, args):
         body = make_stirrer(kitchen, pose[:2], pose[2], *args[name])
     elif 'block' in name:
         body = make_block(kitchen, pose[:2], pose[2], *args[name])
+    elif 'drawer' in name:
+        body = make_drawer(kitchen, pose[:2], pose[2], *args[name])
     else:
         raise NotImplementedError(name)
     body.name = name
@@ -431,6 +434,53 @@ def make_block(b2world_interface, pos, angle, w, h, d=None):
     body.usr_d = None
     body.shift = shift
     body.userData = "block"
+    return body
+
+def make_drawer(b2world_interface, pos, angle, w, h, d, shifth=0.0):
+    '''
+    Return a Box2D body that resembles a drawer containing a cup.
+    The center of the block is at its bottom center.
+    Args:
+        b2world_interface: an instance of b2WorldInterface
+        pos: position
+        angle: angle
+        w: width
+        h: height
+    '''
+    shift = np.array([w/2.0, shifth*h])
+    world = b2world_interface.world
+    body = world.CreateDynamicBody(
+        position=pos,
+        angle=angle
+    )
+    
+    polygon_shape = [(0, h), (w, h), (w, d+h), (0, d + h)]
+    polygon_shape = [(v[0] - shift[0], v[1]-shift[1]) for v in polygon_shape]
+    body.CreateFixture(
+        shape=b2PolygonShape(vertices=polygon_shape),
+        friction=1,
+        density=0.5
+    )
+    polygon_shape = [(0, 0), (d, 0), (d, h), (0, h)]
+    polygon_shape = [(v[0] - shift[0], v[1]-shift[1]) for v in polygon_shape]
+    body.CreateFixture(
+        shape=b2PolygonShape(vertices=polygon_shape),
+        friction=1,
+        density=0.5
+    )
+    polygon_shape = [(w, 0), (w, h), (w-d, h), (w-d, 0)]
+    polygon_shape = [(v[0] - shift[0], v[1]-shift[1]) for v in polygon_shape]
+    body.CreateFixture(
+        shape=b2PolygonShape(vertices=polygon_shape),
+        friction=1,
+        density=0.5
+    )
+
+    body.usr_w = w
+    body.usr_h = h
+    body.usr_d = d
+    body.shift = shift
+    body.userData = "drawer"
     return body
 
 
